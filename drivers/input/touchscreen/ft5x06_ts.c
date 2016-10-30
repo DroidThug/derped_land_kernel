@@ -85,17 +85,8 @@ static struct Upgrade_Info fts_updateinfo[] = {
 	{0x11, "FT5336i", TPD_MAX_POINTS_5, AUTO_CLB_NONEED, 30, 30, 0x79, 0x11, 10, 2000},
 };
 
-#define FT_STORE_TS_INFO(buf, id, fw_maj, fw_min, fw_sub_min) \
-			snprintf(buf, FT_INFO_MAX_LEN, \
-				"vendor name = Focaltech\n" \
-				"model = 0x%x\n" \
-				"fw_version = %d.%d.%d\n", \
-				id, fw_maj, fw_min, fw_sub_min)
-#define FT_TS_INFO_SYSFS_DIR_NAME "ts_info"
-static char *ts_info_buff;
-
-#define FT_STORE_TS_DBG_INFO(buf, id, name, max_tch, group_id, \
-			fw_vkey_support, fw_name, fw_maj, fw_min, fw_sub_min) \
+#define FT_STORE_TS_INFO(buf, id, name, max_tch, group_id, fw_vkey_support, \
+			fw_name, fw_maj, fw_min, fw_sub_min) \
 			snprintf(buf, FT_INFO_MAX_LEN, \
 				"controller\t= focaltech\n" \
 				"model\t\t= 0x%x\n" \
@@ -114,6 +105,7 @@ static char *ts_info_buff;
 #define CTP_PARENT_PROC_NAME "touchscreen"
 #define CTP_OPEN_PROC_NAME		"ctp_openshort_test"
 #define CTP_LOCKDOWN_INFOR_NAME   "lockdown_info"
+
 
 
 
@@ -385,10 +377,6 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 	}
 
 	for (i = 0; i < data->pdata->num_max_touches; i++) {
-		/*
-		 * Getting the finger ID of the touch event incase of
-		 * multiple touch events
-		 */
 		id = (buf[FT_TOUCH_ID_POS + FT_ONE_TCH_LEN * i]) >> 4;
 		if (id >= FT_MAX_ID)
 			break;
@@ -425,6 +413,10 @@ static irqreturn_t ft5x06_ts_interrupt(int irq, void *dev_id)
 
 	if (num_touches == 0) {
 		 for (i = 0; i < data->pdata->num_max_touches; i++) {
+               /*
+                * Getting the finger ID of the touch event incase of
+                * multiple touch events
+                */
 			input_mt_slot(ip_dev, i);
 			input_mt_report_slot_state(ip_dev, MT_TOOL_FINGER, 0);
 		}
@@ -645,6 +637,7 @@ static int ft5x06_ts_resume(struct device *dev)
 		return 0;
 	}
 
+
 	if (data->pdata->power_on) {
 		err = data->pdata->power_on(true);
 		if (err) {
@@ -748,13 +741,6 @@ static void ft5x06_ts_early_suspend(struct early_suspend *handler)
 						   struct ft5x06_ts_data,
 						   early_suspend);
 
-	/*
-	 * During early suspend/late resume, the driver doesn't access xPU/SMMU
-	 * protected HW resources. So, there is no compelling need to block,
-	 * but notifying the userspace that a power event has occurred is
-	 * enough. Hence 'blocking' variable can be set to false.
-	 */
-	ft5x06_secure_touch_stop(data, false);
 	ft5x06_ts_suspend(&data->client->dev);
 }
 
@@ -764,7 +750,6 @@ static void ft5x06_ts_late_resume(struct early_suspend *handler)
 						   struct ft5x06_ts_data,
 						   early_suspend);
 
-	ft5x06_secure_touch_stop(data, false);
 	ft5x06_ts_resume(&data->client->dev);
 }
 #endif
@@ -1389,13 +1374,11 @@ static int ft5x06_fw_upgrade(struct device *dev, bool force)
 
 	ft5x06_update_fw_ver(data);
 
-	FT_STORE_TS_DBG_INFO(data->ts_info, data->family_id, data->pdata->name,
+	FT_STORE_TS_INFO(data->ts_info, data->family_id, data->pdata->name,
 			data->pdata->num_max_touches, data->pdata->group_id,
 			data->pdata->fw_vkey_support ? "yes" : "no",
 			data->pdata->fw_name, data->fw_ver[0],
 			data->fw_ver[1], data->fw_ver[2]);
-	FT_STORE_TS_INFO(ts_info_buff, data->family_id, data->fw_ver[0],
-			 data->fw_ver[1], data->fw_ver[2]);
 rel_fw:
 	release_firmware(fw);
 	return rc;
@@ -1470,6 +1453,7 @@ static ssize_t ft5x06_force_update_fw_store(struct device *dev,
 
 static DEVICE_ATTR(force_update_fw, 0664, ft5x06_update_fw_show,
 				ft5x06_force_update_fw_store);
+
 
 #define FT_DEBUG_DIR_NAME	"ts_debug"
 
@@ -2752,7 +2736,7 @@ static int ft5x06_ts_probe(struct i2c_client *client,
 	ft5x06_update_fw_ver(data);
 	ft5x06_update_fw_vendor_id(data);
 
-	FT_STORE_TS_DBG_INFO(data->ts_info, data->family_id, data->pdata->name,
+	FT_STORE_TS_INFO(data->ts_info, data->family_id, data->pdata->name,
 			data->pdata->num_max_touches, data->pdata->group_id,
 			data->pdata->fw_vkey_support ? "yes" : "no",
 			data->pdata->fw_name, data->fw_ver[0],
@@ -2857,7 +2841,7 @@ free_inputdev:
 static int ft5x06_ts_remove(struct i2c_client *client)
 {
 	struct ft5x06_ts_data *data = i2c_get_clientdata(client);
-	int retval, attr_count;
+	int retval;
 
 #if CTP_SYS_APK_UPDATE
 	device_remove_file(&client->dev, &dev_attr_fw_name);
@@ -2886,11 +2870,6 @@ static int ft5x06_ts_remove(struct i2c_client *client)
 		retval = ft5x06_ts_pinctrl_select(data, false);
 		if (retval < 0)
 			CTP_ERROR("Cannot get idle pinctrl state\n");
-	}
-
-	for (attr_count = 0; attr_count < ARRAY_SIZE(attrs); attr_count++) {
-		sysfs_remove_file(&data->input_dev->dev.kobj,
-					&attrs[attr_count].attr);
 	}
 
 	if (data->pdata->power_on)
