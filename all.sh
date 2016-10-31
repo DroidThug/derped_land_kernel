@@ -1,5 +1,3 @@
-echo -e "KERNEL"
-
 KERNEL_DIR=$PWD
 KERN_IMG=$KERNEL_DIR/arch/arm64/boot/Image
 DTBTOOL=$KERNEL_DIR/dtbToolCM
@@ -19,7 +17,8 @@ export KBUILD_BUILD_USER="AayushRd7"
 export KBUILD_BUILD_HOST="XeSki-PoWeR"
 export LOCALVERSION="-XesKi™-v4"
 STRIP="/home/aayushrd7/sb-4.9/bin/aarch64-strip"
-MODULES_DIR=$KERNEL_DIR/drivers/staging/prima
+MODULES_DIR=/home/aayushrd7/R3s/kernel/common
+OUTPUT_DIR=/home/aayushrd7/R3s/kernel/land
 
 compile_kernel ()
 {
@@ -60,6 +59,19 @@ rm -rf $KERNEL_DIR/arch/arm/boot/dt.img
 compile_kernel
 ;;
 esac
+
+echo -e "Making The Zip"
+#ZIP MAKING
+rm -rf $OUT_DIR/XeskiKernel*.zip
+rm -rf $OUT_DIR/modules/*
+rm -rf $OUT_DIR/dtb
+rm -rf $OUT_DIR/zImage
+cp $KERNEL_DIR/arch/arm64/boot/Image  $OUT_DIR/zImage
+cp $KERNEL_DIR/arch/arm64/boot/dt.img  $OUT_DIR/dtb
+cp $MODULES_DIR/*.ko $OUT_DIR/modules/
+cd $OUT_DIR
+zip -r XesKiKernel_SBTC-v1.0.zip *
+cd $KERNEL_DIR
 
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
