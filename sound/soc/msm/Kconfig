@@ -94,6 +94,7 @@ config SND_SOC_APQ8084
 	select SND_SOC_QDSP6V2
 	select SND_SOC_MSM_STUB
 	select SND_SOC_MSM_HOSTLESS_PCM
+	select SND_SOC_WCD9330
 	select SND_SOC_WCD9320
 	select SND_DYNAMIC_MINORS
 	select DOLBY_DAP
@@ -118,6 +119,7 @@ config SND_SOC_MSM8994
 	select SND_DYNAMIC_MINORS
 	select MSM_QDSP6_APRV2
 	select MSM_QDSP6V2_CODECS
+	select SND_SOC_WCD9330
 	select SND_SOC_MSM_HDMI_CODEC_RX
 	select QTI_PP
 	select DTS_SRS_TM
@@ -142,6 +144,7 @@ config SND_SOC_MSM8996
 	select SND_DYNAMIC_MINORS
 	select MSM_QDSP6_APRV2
 	select MSM_QDSP6V2_CODECS
+	select SND_SOC_WCD9330
 	select SND_SOC_WCD9335
 	select SND_SOC_WSA881X
 	select SND_SOC_MSM_HDMI_CODEC_RX
@@ -161,13 +164,14 @@ config SND_SOC_MSM8996
 
 config SND_SOC_MSM8X16
 	tristate "SoC Machine driver for MSM8916"
-	depends on ARCH_MSM8953 || ARCH_MSM8937
+	depends on ARCH_MSMTITANIUM || ARCH_MSM8937
 	select SND_SOC_QDSP6V2
 	select SND_SOC_MSM_STUB
 	select SND_SOC_MSM_HOSTLESS_PCM
 	select SND_DYNAMIC_MINORS
 	select MSM_QDSP6_APRV2
 	select MSM_QDSP6V2_CODECS
+	select SND_SOC_WCD9330
 	select SND_SOC_WCD9335
 	select SND_SOC_MSM8X16_WCD
 	select SND_SOC_WSA881X_ANALOG
@@ -179,6 +183,7 @@ config SND_SOC_MSM8X16
 	select DOLBY_DS2
 	select SND_SOC_CPE
 	select SND_SOC_WCD_CPE
+	select SND_SOC_MSM_HDMI_DBA_CODEC_RX
 	select SND_HWDEP
         select DTS_EAGLE
 	help
@@ -195,7 +200,7 @@ config SND_SOC_MDMCALIFORNIUM
         select SND_SOC_MSM_STUB
         select SND_SOC_MSM_HOSTLESS_PCM
         select SND_DYNAMIC_MINORS
-        select MSM_QDSP6_APRV3_GLINK
+        select MSM_QDSP6_APRV3
         select MSM_QDSP6V2_CODECS
         select SND_SOC_WCD9335
         select SND_SOC_WSA881X
@@ -212,6 +217,7 @@ config SND_SOC_MDM9607
 	depends on ARCH_MDM9607
 	select SND_SOC_QDSP6V2
 	select SND_SOC_MSM_STUB
+	select SND_SOC_WCD9330
 	select SND_SOC_MSM_HOSTLESS_PCM
 	select SND_DYNAMIC_MINORS
 	select MSM_QDSP6_APRV3
